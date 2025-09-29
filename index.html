@@ -362,22 +362,32 @@
 
       <div class="export-section">
         <h3>Gestione Dati</h3>
-        <p>
-          I tuoi dati vengono salvati automaticamente online e localmente
-        </p>
-        <div id="authSection" style="margin-bottom: 20px;">
-          <input type="email" id="userEmail" placeholder="La tua email" style="width: 250px; margin-right: 10px;">
+        <p>I tuoi dati vengono salvati automaticamente online e localmente</p>
+        <div id="authSection" style="margin-bottom: 20px">
+          <input
+            type="email"
+            id="userEmail"
+            placeholder="La tua email"
+            style="width: 250px; margin-right: 10px"
+          />
           <button onclick="signUp()" id="signUpBtn">🔐 Registrati</button>
           <button onclick="signIn()" id="signInBtn">🔑 Accedi</button>
-          <button onclick="signOut()" id="signOutBtn" style="display: none;">🚪 Esci</button>
+          <button onclick="signOut()" id="signOutBtn" style="display: none">
+            🚪 Esci
+          </button>
         </div>
-        <div id="userInfo" style="display: none; margin-bottom: 15px; color: #27ae60;">
+        <div
+          id="userInfo"
+          style="display: none; margin-bottom: 15px; color: #27ae60"
+        >
           👤 Connesso come: <span id="userEmailDisplay"></span>
         </div>
         <button onclick="exportToCSV()">📊 Esporta in CSV</button>
         <button onclick="saveToLocal()">💾 Salva Locale</button>
         <button onclick="loadFromLocal()">📂 Carica Dati Salvati</button>
-        <button onclick="syncData()" id="syncBtn" style="display: none;">🔄 Sincronizza Online</button>
+        <button onclick="syncData()" id="syncBtn" style="display: none">
+          🔄 Sincronizza Online
+        </button>
       </div>
     </div>
 
@@ -387,12 +397,14 @@
       // Inizializzazione Supabase
       async function initSupabase() {
         try {
-          if (SUPABASE_URL !== 'https://your-project.supabase.co') {
+          if (SUPABASE_URL !== "https://your-project.supabase.co") {
             const { createClient } = supabase;
             supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            
+
             // Controlla se l'utente è già autenticato
-            const { data: { user } } = await supabaseClient.auth.getUser();
+            const {
+              data: { user },
+            } = await supabaseClient.auth.getUser();
             if (user) {
               currentUser = user;
               updateAuthUI(true);
@@ -400,60 +412,72 @@
             }
           }
         } catch (error) {
-          console.log('Supabase non configurato, usando solo storage locale');
+          console.log("Supabase non configurato, usando solo storage locale");
         }
       }
 
       async function signUp() {
-        const email = document.getElementById('userEmail').value;
+        const email = document.getElementById("userEmail").value;
         if (!email || !supabaseClient) return;
 
         try {
           const { data, error } = await supabaseClient.auth.signUp({
             email: email,
-            password: 'temp-password-' + Math.random().toString(36).substring(7),
+            password:
+              "temp-password-" + Math.random().toString(36).substring(7),
           });
-          
+
           if (error) throw error;
-          alert('Controlla la tua email per il link di conferma!');
+          alert("Controlla la tua email per il link di conferma!");
         } catch (error) {
-          alert('Errore registrazione: ' + error.message);
+          alert("Errore registrazione: " + error.message);
         }
       }
 
       async function signIn() {
-        const email = document.getElementById('userEmail').value;
+        const email = document.getElementById("userEmail").value;
         if (!email || !supabaseClient) return;
 
         try {
           const { data, error } = await supabaseClient.auth.signInWithOtp({
             email: email,
           });
-          
+
           if (error) throw error;
-          alert('Controlla la tua email per il link di accesso!');
+          alert("Controlla la tua email per il link di accesso!");
         } catch (error) {
-          alert('Errore accesso: ' + error.message);
+          alert("Errore accesso: " + error.message);
         }
       }
 
       async function signOut() {
         if (!supabaseClient) return;
-        
+
         await supabaseClient.auth.signOut();
         currentUser = null;
         updateAuthUI(false);
       }
 
       function updateAuthUI(isLoggedIn) {
-        document.getElementById('signUpBtn').style.display = isLoggedIn ? 'none' : 'inline-block';
-        document.getElementById('signInBtn').style.display = isLoggedIn ? 'none' : 'inline-block';
-        document.getElementById('signOutBtn').style.display = isLoggedIn ? 'inline-block' : 'none';
-        document.getElementById('syncBtn').style.display = isLoggedIn ? 'inline-block' : 'none';
-        document.getElementById('userInfo').style.display = isLoggedIn ? 'block' : 'none';
-        
+        document.getElementById("signUpBtn").style.display = isLoggedIn
+          ? "none"
+          : "inline-block";
+        document.getElementById("signInBtn").style.display = isLoggedIn
+          ? "none"
+          : "inline-block";
+        document.getElementById("signOutBtn").style.display = isLoggedIn
+          ? "inline-block"
+          : "none";
+        document.getElementById("syncBtn").style.display = isLoggedIn
+          ? "inline-block"
+          : "none";
+        document.getElementById("userInfo").style.display = isLoggedIn
+          ? "block"
+          : "none";
+
         if (isLoggedIn && currentUser) {
-          document.getElementById('userEmailDisplay').textContent = currentUser.email;
+          document.getElementById("userEmailDisplay").textContent =
+            currentUser.email;
         }
       }
 
@@ -489,18 +513,16 @@
         });
 
         try {
-          const { error } = await supabaseClient
-            .from('schedules')
-            .upsert({
-              user_id: currentUser.id,
-              week_key: weekKey,
-              data: weekData,
-              updated_at: new Date().toISOString()
-            });
-            
+          const { error } = await supabaseClient.from("schedules").upsert({
+            user_id: currentUser.id,
+            week_key: weekKey,
+            data: weekData,
+            updated_at: new Date().toISOString(),
+          });
+
           if (error) throw error;
         } catch (error) {
-          console.error('Errore salvataggio online:', error);
+          console.error("Errore salvataggio online:", error);
         }
       }
 
@@ -508,21 +530,23 @@
         if (!supabaseClient || !currentUser) return;
 
         const weekKey = `week_${currentWeekStart.toISOString().split("T")[0]}`;
-        
+
         try {
           const { data, error } = await supabaseClient
-            .from('schedules')
-            .select('data')
-            .eq('user_id', currentUser.id)
-            .eq('week_key', weekKey)
+            .from("schedules")
+            .select("data")
+            .eq("user_id", currentUser.id)
+            .eq("week_key", weekKey)
             .single();
-            
-          if (error && error.code !== 'PGRST116') throw error;
-          
+
+          if (error && error.code !== "PGRST116") throw error;
+
           if (data && data.data) {
             // Pulisci gli eventi esistenti
-            document.querySelectorAll('.event').forEach(event => event.remove());
-            
+            document
+              .querySelectorAll(".event")
+              .forEach((event) => event.remove());
+
             Object.entries(data.data).forEach(([key, events]) => {
               const [day, time] = key.split("_");
               const slot = document.querySelector(
@@ -540,35 +564,38 @@
             updateStats();
           }
         } catch (error) {
-          console.error('Errore caricamento online:', error);
+          console.error("Errore caricamento online:", error);
         }
       }
 
       async function syncData() {
         await saveToSupabase();
         await loadFromSupabase();
-        alert('Dati sincronizzati con successo!');
+        alert("Dati sincronizzati con successo!");
       }
 
       // Listener per cambio autenticazione
-      if (typeof supabase !== 'undefined') {
-        supabase.createClient('', '').auth.onAuthStateChange((event, session) => {
-          if (event === 'SIGNED_IN') {
-            currentUser = session.user;
-            updateAuthUI(true);
-            loadFromSupabase();
-          } else if (event === 'SIGNED_OUT') {
-            currentUser = null;
-            updateAuthUI(false);
-          }
-        });
+      if (typeof supabase !== "undefined") {
+        supabase
+          .createClient("", "")
+          .auth.onAuthStateChange((event, session) => {
+            if (event === "SIGNED_IN") {
+              currentUser = session.user;
+              updateAuthUI(true);
+              loadFromSupabase();
+            } else if (event === "SIGNED_OUT") {
+              currentUser = null;
+              updateAuthUI(false);
+            }
+          });
       }
 
       // Configurazione Supabase (sostituisci con le tue credenziali)
       // Configurazione Supabase (sostituisci con le tue credenziali)
-      const SUPABASE_URL = 'https://your-project.supabase.co';
-      const SUPABASE_ANON_KEY = 'your-anon-key';
-      
+      const SUPABASE_URL = "https://sfpoczkspfgecqexsjlk.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmcG9jemtzcGZnZWNxZXhzamxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxODIzMzMsImV4cCI6MjA3NDc1ODMzM30.AuI9HT9KwL4nDfUWT6aw3Q0nB9iwGMFLVunz9X7WAQw";
+
       let supabaseClient = null;
       let currentUser = null;
 
