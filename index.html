@@ -161,6 +161,23 @@
     <!-- Script Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+      // Configurazione Supabase (sostituisci con le tue credenziali)
+      const SUPABASE_URL = "https://sfpoczkspfgecqexsjlk.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmcG9jemtzcGZnZWNxZXhzamxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxODIzMzMsImV4cCI6MjA3NDc1ODMzM30.AuI9HT9KwL4nDfUWT6aw3Q0nB9iwGMFLVunz9X7WAQw";
+
+      let supabaseClient = null;
+      let currentUser = null;
+
+      let currentWeekStart = new Date();
+      currentWeekStart.setDate(
+        currentWeekStart.getDate() - currentWeekStart.getDay() + 1
+      );
+
+      let events = {};
+      let currentEditingEvent = null;
+      let currentSlot = null;
+
       // Inizializzazione Supabase
       async function initSupabase() {
         try {
@@ -359,21 +376,6 @@
 
       // Configurazione Supabase (sostituisci con le tue credenziali)
       // Configurazione Supabase (sostituisci con le tue credenziali)
-      const SUPABASE_URL = "https://sfpoczkspfgecqexsjlk.supabase.co";
-      const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmcG9jemtzcGZnZWNxZXhzamxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxODIzMzMsImV4cCI6MjA3NDc1ODMzM30.AuI9HT9KwL4nDfUWT6aw3Q0nB9iwGMFLVunz9X7WAQw";
-
-      let supabaseClient = null;
-      let currentUser = null;
-
-      let currentWeekStart = new Date();
-      currentWeekStart.setDate(
-        currentWeekStart.getDate() - currentWeekStart.getDay() + 1
-      );
-
-      let events = {};
-      let currentEditingEvent = null;
-      let currentSlot = null;
 
       const timeSlots = [
         "08:00",
