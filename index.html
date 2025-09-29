@@ -300,6 +300,34 @@
         font-size: 14px;
         display: none;
       }
+      .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        justify-content: flex-end;
+      }
+      .form-actions button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s ease;
+      }
+      .form-actions button[type="submit"] {
+        background-color: #27ae60;
+        color: white;
+      }
+      .form-actions button[type="submit"]:hover {
+        background-color: #219a52;
+      }
+      .form-actions button[type="button"] {
+        background-color: #95a5a6;
+        color: white;
+      }
+      .form-actions button[type="button"]:hover {
+        background-color: #7f8c8d;
+      }
     </style>
   </head>
   <body>
@@ -388,6 +416,44 @@
         <button onclick="syncData()" id="syncBtn" style="display: none">
           🔄 Sincronizza Online
         </button>
+      </div>
+    </div>
+
+    <!-- Modal for adding/editing events -->
+    <div id="eventModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle">Aggiungi Evento</h2>
+        <form id="eventForm">
+          <div class="form-group">
+            <label for="eventType">Tipo di evento:</label>
+            <select id="eventType" required>
+              <option value="uni">🎓 Università</option>
+              <option value="work1">💼 Lavoro Persona 1</option>
+              <option value="work2">💼 Lavoro Persona 2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="eventTitle">Titolo:</label>
+            <input type="text" id="eventTitle" required>
+          </div>
+          <div class="form-group">
+            <label for="eventLocation">Luogo (opzionale):</label>
+            <input type="text" id="eventLocation">
+          </div>
+          <div class="form-group">
+            <label for="eventNotes">Note (opzionale):</label>
+            <textarea id="eventNotes" rows="3"></textarea>
+          </div>
+          <div class="conflict-warning" id="conflictWarning">
+            ⚠️ Attenzione: Questo evento è in conflitto con altri eventi esistenti!
+          </div>
+          <div class="form-actions">
+            <button type="submit">💾 Salva</button>
+            <button type="button" onclick="closeModal()">❌ Annulla</button>
+            <button type="button" id="deleteBtn" onclick="deleteEvent()" style="display: none; background-color: #e74c3c;">🗑️ Elimina</button>
+          </div>
+        </form>
       </div>
     </div>
 
