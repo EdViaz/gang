@@ -272,12 +272,56 @@
           editEvent(data, event);
         };
         
-        // Posizionamento automatico basato sull'orario personalizzato
+        return event;
+      }
+
+      function findBestSlotForTime(startTime, endTime) {
+        if (!startTime || !endTime) return null;
+        
+        const startMinutes = timeToMinutes(startTime);
+        const endMinutes = timeToMinutes(endTime);
+        
+        // Trova il time slot più vicino all'orario di inizio
+        let bestSlotIndex = 0;
+        let minDifference = Infinity;
+        
+        timeSlots.forEach((slot, index) => {
+          const slotMinutes = timeToMinutes(slot);
+          const difference = Math.abs(slotMinutes - startMinutes);
+          
+          if (difference < minDifference) {
+            minDifference = difference;
+            bestSlotIndex = index;
+          }
+        });
+        
+        return bestSlotIndex;
+      }
+
+      function positionEventInCorrectSlot(eventElement, data, currentSlot) {
         if (data.startTime && data.endTime) {
-          positionEventByTime(event, data.startTime, data.endTime);
+          const bestSlotIndex = findBestSlotForTime(data.startTime, data.endTime);
+          
+          if (bestSlotIndex !== null) {
+            // Trova il nuovo slot corretto usando il time slot corrispondente
+            const dayIndex = currentSlot.dataset.day;
+            const targetTime = timeSlots[bestSlotIndex];
+            const newSlot = document.querySelector(
+              `[data-day="${dayIndex}"][data-time="${targetTime}"]`
+            );
+            
+            if (newSlot && newSlot !== currentSlot) {
+              // Sposta l'evento nel slot corretto
+              newSlot.appendChild(eventElement);
+              currentSlot = newSlot;
+            }
+          }
+          
+          // Applica il posizionamento fine all'interno del slot
+          positionEventByTime(eventElement, data.startTime, data.endTime);
         }
         
-        return event;
+        return currentSlot;
       }
 
       function positionEventByTime(eventElement, startTime, endTime) {
@@ -286,19 +330,28 @@
         const endMinutes = timeToMinutes(endTime);
         const duration = endMinutes - startMinutes;
         
-        // Calcola l'offset dalla prima ora (8:00 = 480 minuti)
-        const firstHourMinutes = 8 * 60; // 8:00 in minuti
-        const offsetFromFirstHour = startMinutes - firstHourMinutes;
+        // Trova l'ora del slot corrente
+        const parentSlot = eventElement.parentElement;
+        if (!parentSlot || !parentSlot.dataset.time) return;
         
-        // Ogni slot è di 60 minuti (1 ora)
-        const pixelsPerHour = 60; // Altezza approssimativa di ogni slot
-        const topOffset = (offsetFromFirstHour / 60) * pixelsPerHour;
-        const height = (duration / 60) * pixelsPerHour;
+        const slotTime = parentSlot.dataset.time;
+        const slotMinutes = timeToMinutes(slotTime);
         
-        // Applica il posizionamento
-        eventElement.style.top = `${topOffset}px`;
-        eventElement.style.height = `${Math.max(height, 30)}px`; // Minimo 30px
-        eventElement.style.zIndex = '5';
+        // Calcola l'offset dall'inizio del slot
+        const offsetFromSlot = startMinutes - slotMinutes;
+        
+        // Ogni minuto corrisponde a circa 1px (60px per ora)
+        const pixelsPerMinute = 1;
+        const topOffset = offsetFromSlot * pixelsPerMinute;
+        const height = duration * pixelsPerMinute;
+        
+        // Applica il posizionamento solo se l'evento inizia nel slot corrente
+        if (offsetFromSlot >= 0 && offsetFromSlot < 60) {
+          eventElement.style.top = `${topOffset}px`;
+          eventElement.style.height = `${Math.max(height, 30)}px`;
+          eventElement.style.zIndex = '5';
+          eventElement.style.position = 'relative';
+        }
       }
 
       function timeToMinutes(timeString) {
@@ -430,7 +483,19 @@
         }
 
         const event = createEvent(data);
-        targetSlot.appendChild(event);
+        let finalSlot = targetSlot;
+        
+        // Se ha orari personalizzati, trova il slot corretto
+        if (data.startTime && data.endTime) {
+          finalSlot = positionEventInCorrectSlot(event, data, targetSlot);
+        }
+        
+        finalSlot.appendChild(event);
+
+        // Applica il posizionamento fine se necessario
+        if (data.startTime && data.endTime) {
+          positionEventByTime(event, data.startTime, data.endTime);
+        }
 
         updateStats();
         saveToLocalStorage();
@@ -589,7 +654,27 @@
             if (slot) {
               events.forEach((eventData) => {
                 const event = createEvent(eventData);
-                slot.appendChild(event);
+                
+                // Se ha orari personalizzati, trova il slot corretto
+                if (eventData.startTime && eventData.endTime) {
+                  const bestSlotIndex = findBestSlotForTime(eventData.startTime, eventData.endTime);
+                  if (bestSlotIndex !== null) {
+                    const targetTime = timeSlots[bestSlotIndex];
+                    const correctSlot = document.querySelector(
+                      `[data-day="${day}"][data-time="${targetTime}"]`
+                    );
+                    if (correctSlot) {
+                      correctSlot.appendChild(event);
+                      positionEventByTime(event, eventData.startTime, eventData.endTime);
+                    } else {
+                      slot.appendChild(event);
+                    }
+                  } else {
+                    slot.appendChild(event);
+                  }
+                } else {
+                  slot.appendChild(event);
+                }
               });
             }
           });
