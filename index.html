@@ -246,6 +246,24 @@
         document.getElementById("deleteBtn").style.display = "none";
         document.getElementById("conflictWarning").style.display = "none";
         document.getElementById("eventModal").style.display = "block";
+        
+        // Gestisci visibilità campo aula
+        toggleLocationField();
+        
+        // Aggiungi listener per cambiamenti tipo evento
+        document.getElementById("eventType").addEventListener('change', toggleLocationField);
+      }
+
+      function toggleLocationField() {
+        const eventType = document.getElementById("eventType").value;
+        const locationGroup = document.getElementById("eventLocation").parentElement;
+        
+        if (eventType === 'work1' || eventType === 'work2') {
+          locationGroup.style.display = 'none';
+          document.getElementById("eventLocation").value = '';
+        } else {
+          locationGroup.style.display = 'block';
+        }
       }
 
       function getNextHour(timeString) {
@@ -376,6 +394,18 @@
         return hours * 60 + minutes;
       }
 
+      function updateSlotLayout(slot) {
+        if (!slot || !slot.classList.contains('slot')) return;
+        
+        const events = slot.querySelectorAll('.event');
+        
+        if (events.length > 1) {
+          slot.classList.add('has-multiple-events');
+        } else {
+          slot.classList.remove('has-multiple-events');
+        }
+      }
+
       function minutesToTime(minutes) {
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
@@ -399,21 +429,46 @@
       function handleDrop(e) {
         e.preventDefault();
         if (draggedEvent && e.target.classList.contains('slot')) {
-          // Rimuovi l'evento dalla posizione originale
           const originalParent = draggedEvent.parentElement;
+          const newSlot = e.target;
           
           // Aggiungi l'evento alla nuova posizione
-          e.target.appendChild(draggedEvent);
+          newSlot.appendChild(draggedEvent);
           
-          // Reset del posizionamento personalizzato se non ha orari specifici
-          const hasCustomTime = draggedEvent.querySelector('small') && 
-                               draggedEvent.querySelector('small').textContent.includes('⏰');
-          
-          if (!hasCustomTime) {
-            draggedEvent.style.top = '';
-            draggedEvent.style.height = '';
-            draggedEvent.style.zIndex = '';
+          // Aggiorna l'orario personalizzato basandosi sul nuovo slot
+          const newTime = newSlot.dataset.time;
+          if (newTime) {
+            const endTime = getNextHour(newTime);
+            
+            // Trova e aggiorna il contenuto dell'evento con i nuovi orari
+            const eventTitle = draggedEvent.querySelector('strong').textContent;
+            const eventType = draggedEvent.classList.contains('event-uni') ? 'uni' :
+                            draggedEvent.classList.contains('event-work1') ? 'work1' : 'work2';
+            
+            // Estrai location e notes esistenti se ci sono
+            let location = '';
+            let notes = '';
+            const locationEl = draggedEvent.querySelector('small');
+            if (locationEl && locationEl.textContent.includes('📍')) {
+              location = locationEl.textContent.replace('📍 ', '').replace(/⏰.*?- \d{2}:\d{2}\s*/, '');
+            }
+            
+            // Ricostruisci il contenuto dell'evento
+            let eventContent = `<strong>${eventTitle}</strong>`;
+            eventContent += `<br><small>⏰ ${newTime} - ${endTime}</small>`;
+            if (location) {
+              eventContent += `<br><small>📍 ${location}</small>`;
+            }
+            
+            draggedEvent.innerHTML = eventContent;
+            
+            // Applica il posizionamento
+            positionEventByTime(draggedEvent, newTime, endTime);
           }
+          
+          // Gestisci la disposizione degli eventi nel slot originale e nuovo
+          updateSlotLayout(originalParent);
+          updateSlotLayout(newSlot);
           
           // Aggiorna le statistiche
           updateStats();
@@ -432,11 +487,19 @@
         document.getElementById("eventNotes").value = data.notes || "";
         document.getElementById("deleteBtn").style.display = "block";
         document.getElementById("eventModal").style.display = "block";
+        
+        // Gestisci visibilità campo aula
+        toggleLocationField();
+        
+        // Aggiungi listener per cambiamenti tipo evento
+        document.getElementById("eventType").addEventListener('change', toggleLocationField);
       }
 
       function deleteEvent() {
         if (currentEditingEvent) {
+          const parentSlot = currentEditingEvent.element.parentElement;
           currentEditingEvent.element.remove();
+          updateSlotLayout(parentSlot);
           updateStats();
           saveToLocalStorage();
         }
@@ -493,6 +556,7 @@
         // Solo ora rimuovi l'evento esistente
         if (currentEditingEvent) {
           currentEditingEvent.element.remove();
+          updateSlotLayout(targetSlot);
         }
 
         if (checkConflicts(targetSlot, data.type)) {
@@ -527,6 +591,9 @@
         if (data.startTime && data.endTime) {
           positionEventByTime(event, data.startTime, data.endTime);
         }
+        
+        // Aggiorna il layout del slot
+        updateSlotLayout(finalSlot);
 
         updateStats();
         saveToLocalStorage();
@@ -711,6 +778,11 @@
           });
 
           updateStats();
+          
+          // Applica il layout a tutti gli slot con eventi multipli
+          document.querySelectorAll('.slot').forEach(slot => {
+            updateSlotLayout(slot);
+          });
         }
       }
 

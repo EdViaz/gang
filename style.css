@@ -122,14 +122,35 @@ button:hover {
   position: relative;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px;
 }
+
+/* Eventi affiancati quando contemporanei */
+.slot.has-multiple-events {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.slot.has-multiple-events .event {
+  flex: 1;
+  min-width: calc(50% - 1px);
+  position: relative;
+  left: auto;
+  right: auto;
+}
+
 .slot:hover {
   background-color: #f0f0f0;
 }
 .event {
-  position: absolute;
-  left: 2px;
-  right: 2px;
+  position: relative;
+  left: auto;
+  right: auto;
   padding: 8px;
   border-radius: 6px;
   font-size: 13px;
@@ -143,6 +164,8 @@ button:hover {
   line-height: 1.3;
   min-height: 30px;
   height: auto;
+  margin: 0;
+  flex-shrink: 0;
 }
 .event small {
   display: block;
