@@ -4,303 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pianificatore Orario Università e Lavoro</title>
-    <style>
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background-color: #f0f2f5;
-      }
-      .container {
-        max-width: 1600px;
-        margin: 0 auto;
-        background-color: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-      }
-      .header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 25px;
-        text-align: center;
-      }
-      h1 {
-        margin: 0;
-        font-size: 28px;
-        font-weight: 600;
-      }
-      .controls {
-        background-color: #f8f9fa;
-        padding: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 15px;
-        border-bottom: 1px solid #e0e0e0;
-      }
-      .week-selector {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      button {
-        background-color: #667eea;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 500;
-        transition: all 0.3s ease;
-      }
-      button:hover {
-        background-color: #5a67d8;
-        transform: translateY(-1px);
-      }
-      .week-display {
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-        padding: 10px 20px;
-        background-color: white;
-        border-radius: 6px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      }
-      .legend {
-        display: flex;
-        gap: 20px;
-        align-items: center;
-      }
-      .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-      }
-      .legend-box {
-        width: 24px;
-        height: 24px;
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-      .schedule-container {
-        padding: 20px;
-        overflow-x: auto;
-      }
-      .schedule-grid {
-        display: grid;
-        grid-template-columns: 80px repeat(4, 1fr);
-        gap: 1px;
-        background-color: #e0e0e0;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        overflow: hidden;
-        min-width: 1000px;
-      }
-      .time-slot {
-        background-color: #f8f9fa;
-        padding: 10px;
-        text-align: center;
-        font-weight: 600;
-        color: #555;
-        font-size: 14px;
-      }
-      .day-header {
-        background-color: #4a5568;
-        color: white;
-        padding: 15px;
-        text-align: center;
-        font-weight: 600;
-        font-size: 16px;
-      }
-      .time-header {
-        background-color: #4a5568;
-        color: white;
-        padding: 15px;
-        text-align: center;
-        font-weight: 600;
-      }
-      .slot {
-        background-color: white;
-        min-height: 60px;
-        position: relative;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-      }
-      .slot:hover {
-        background-color: #f0f0f0;
-      }
-      .event {
-        position: absolute;
-        left: 2px;
-        right: 2px;
-        padding: 8px;
-        border-radius: 6px;
-        font-size: 13px;
-        color: white;
-        cursor: move;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: all 0.2s ease;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .event:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-      }
-      .event-uni {
-        background-color: #3498db;
-      }
-      .event-work1 {
-        background-color: #e74c3c;
-      }
-      .event-work2 {
-        background-color: #f39c12;
-      }
-      .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        animation: fadeIn 0.3s ease;
-      }
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-      .modal-content {
-        background-color: white;
-        margin: 10% auto;
-        padding: 30px;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 500px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        animation: slideIn 0.3s ease;
-      }
-      @keyframes slideIn {
-        from {
-          transform: translateY(-50px);
-          opacity: 0;
-        }
-        to {
-          transform: translateY(0);
-          opacity: 1;
-        }
-      }
-      .form-group {
-        margin-bottom: 20px;
-      }
-      label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: #333;
-      }
-      input,
-      select,
-      textarea {
-        width: 100%;
-        padding: 10px;
-        border: 2px solid #e0e0e0;
-        border-radius: 6px;
-        font-size: 14px;
-        transition: border-color 0.3s ease;
-      }
-      input:focus,
-      select:focus,
-      textarea:focus {
-        outline: none;
-        border-color: #667eea;
-      }
-      .button-group {
-        display: flex;
-        gap: 10px;
-        margin-top: 25px;
-      }
-      .btn-save {
-        background-color: #27ae60;
-      }
-      .btn-save:hover {
-        background-color: #219a52;
-      }
-      .btn-cancel {
-        background-color: #95a5a6;
-      }
-      .btn-cancel:hover {
-        background-color: #7f8c8d;
-      }
-      .btn-delete {
-        background-color: #e74c3c;
-      }
-      .btn-delete:hover {
-        background-color: #c0392b;
-      }
-      .stats-container {
-        padding: 20px;
-        background-color: #f8f9fa;
-        border-top: 1px solid #e0e0e0;
-      }
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-      }
-      .stat-card {
-        background-color: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        text-align: center;
-      }
-      .stat-value {
-        font-size: 28px;
-        font-weight: 700;
-        color: #667eea;
-      }
-      .stat-label {
-        font-size: 14px;
-        color: #666;
-        margin-top: 5px;
-      }
-      .close {
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        color: #aaa;
-        cursor: pointer;
-      }
-      .close:hover {
-        color: #333;
-      }
-      .export-section {
-        padding: 20px;
-        background-color: #e8f4f8;
-        margin: 20px;
-        border-radius: 8px;
-      }
-      .conflict-warning {
-        background-color: #ff6b6b;
-        color: white;
-        padding: 10px;
-        border-radius: 6px;
-        margin-top: 10px;
-        font-size: 14px;
-        display: none;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
   </head>
   <body>
     <div class="container">
@@ -388,6 +93,68 @@
         <button onclick="syncData()" id="syncBtn" style="display: none">
           🔄 Sincronizza Online
         </button>
+      </div>
+    </div>
+
+    <!-- Modal for adding/editing events -->
+    <div id="eventModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle">Aggiungi Evento</h2>
+        <form id="eventForm">
+          <div class="form-group">
+            <label for="eventType">Tipo di evento:</label>
+            <select id="eventType" required>
+              <option value="uni">Lezione Università</option>
+              <option value="work1">Turno Lavoro - Persona 1</option>
+              <option value="work2">Turno Lavoro - Persona 2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="eventTitle">Titolo:</label>
+            <input
+              type="text"
+              id="eventTitle"
+              required
+              placeholder="es. Analisi Matematica, Turno Bar"
+            />
+          </div>
+          <div class="form-group">
+            <label for="eventLocation">Luogo/Aula:</label>
+            <input
+              type="text"
+              id="eventLocation"
+              placeholder="es. Aula 3, Via Roma 10"
+            />
+          </div>
+          <div class="form-group">
+            <label for="eventNotes">Note:</label>
+            <textarea
+              id="eventNotes"
+              rows="3"
+              placeholder="Aggiungi note..."
+            ></textarea>
+          </div>
+          <div class="conflict-warning" id="conflictWarning">
+            ⚠️ Attenzione: C'è un conflitto con un altro evento in questo
+            orario!
+          </div>
+          <div class="button-group">
+            <button type="submit" class="btn-save">Salva</button>
+            <button type="button" class="btn-cancel" onclick="closeModal()">
+              Annulla
+            </button>
+            <button
+              type="button"
+              class="btn-delete"
+              id="deleteBtn"
+              onclick="deleteEvent()"
+              style="display: none"
+            >
+              Elimina
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -575,19 +342,19 @@
       }
 
       // Listener per cambio autenticazione
-      if (typeof supabase !== "undefined") {
-        supabase
-          .createClient("", "")
-          .auth.onAuthStateChange((event, session) => {
-            if (event === "SIGNED_IN") {
-              currentUser = session.user;
-              updateAuthUI(true);
-              loadFromSupabase();
-            } else if (event === "SIGNED_OUT") {
-              currentUser = null;
-              updateAuthUI(false);
-            }
-          });
+      if (typeof supabase !== "undefined" && SUPABASE_URL !== "https://your-project.supabase.co") {
+        const { createClient } = supabase;
+        const tempClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        tempClient.auth.onAuthStateChange((event, session) => {
+          if (event === "SIGNED_IN") {
+            currentUser = session.user;
+            updateAuthUI(true);
+            loadFromSupabase();
+          } else if (event === "SIGNED_OUT") {
+            currentUser = null;
+            updateAuthUI(false);
+          }
+        });
       }
 
       // Configurazione Supabase (sostituisci con le tue credenziali)
