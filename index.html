@@ -2,7 +2,7 @@
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Pianificatore Orario Università e Lavoro</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
@@ -28,11 +28,11 @@
           </div>
           <div class="legend-item">
             <div class="legend-box" style="background-color: #e74c3c"></div>
-            <span>Lavoro P1</span>
+            <span>Leo</span>
           </div>
           <div class="legend-item">
             <div class="legend-box" style="background-color: #f39c12"></div>
-            <span>Lavoro P2</span>
+            <span>Edo</span>
           </div>
         </div>
       </div>
@@ -52,47 +52,17 @@
           </div>
           <div class="stat-card">
             <div class="stat-value" id="work1Hours">0</div>
-            <div class="stat-label">Ore Lavoro Persona 1</div>
+            <div class="stat-label">Ore Leo</div>
           </div>
           <div class="stat-card">
             <div class="stat-value" id="work2Hours">0</div>
-            <div class="stat-label">Ore Lavoro Persona 2</div>
+            <div class="stat-label">Ore Edo</div>
           </div>
           <div class="stat-card">
             <div class="stat-value" id="conflicts">0</div>
             <div class="stat-label">Conflitti Orari</div>
           </div>
         </div>
-      </div>
-
-      <div class="export-section">
-        <h3>Gestione Dati</h3>
-        <p>I tuoi dati vengono salvati automaticamente online e localmente</p>
-        <div id="authSection" style="margin-bottom: 20px">
-          <input
-            type="email"
-            id="userEmail"
-            placeholder="La tua email"
-            style="width: 250px; margin-right: 10px"
-          />
-          <button onclick="signUp()" id="signUpBtn">🔐 Registrati</button>
-          <button onclick="signIn()" id="signInBtn">🔑 Accedi</button>
-          <button onclick="signOut()" id="signOutBtn" style="display: none">
-            🚪 Esci
-          </button>
-        </div>
-        <div
-          id="userInfo"
-          style="display: none; margin-bottom: 15px; color: #27ae60"
-        >
-          👤 Connesso come: <span id="userEmailDisplay"></span>
-        </div>
-        <button onclick="exportToCSV()">📊 Esporta in CSV</button>
-        <button onclick="saveToLocal()">💾 Salva Locale</button>
-        <button onclick="loadFromLocal()">📂 Carica Dati Salvati</button>
-        <button onclick="syncData()" id="syncBtn" style="display: none">
-          🔄 Sincronizza Online
-        </button>
       </div>
     </div>
 
@@ -106,8 +76,8 @@
             <label for="eventType">Tipo di evento:</label>
             <select id="eventType" required>
               <option value="uni">Lezione Università</option>
-              <option value="work1">Turno Lavoro - Persona 1</option>
-              <option value="work2">Turno Lavoro - Persona 2</option>
+              <option value="work1">Leo</option>
+              <option value="work2">Edo</option>
             </select>
           </div>
           <div class="form-group">
@@ -180,16 +150,8 @@
     </div>
 
     <!-- Script Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      // Configurazione Supabase (sostituisci con le tue credenziali)
-      const SUPABASE_URL = "https://sfpoczkspfgecqexsjlk.supabase.co";
-      const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmcG9jemtzcGZnZWNxZXhzamxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxODIzMzMsImV4cCI6MjA3NDc1ODMzM30.AuI9HT9KwL4nDfUWT6aw3Q0nB9iwGMFLVunz9X7WAQw";
-
-      let supabaseClient = null;
-      let currentUser = null;
-
+      // Configurazione base
       let currentWeekStart = new Date();
       currentWeekStart.setDate(
         currentWeekStart.getDate() - currentWeekStart.getDay() + 1
@@ -198,227 +160,9 @@
       let events = {};
       let currentEditingEvent = null;
       let currentSlot = null;
+      let draggedEvent = null;
 
-      // Inizializzazione Supabase
-      async function initSupabase() {
-        try {
-          if (SUPABASE_URL !== "https://your-project.supabase.co") {
-            const { createClient } = supabase;
-            supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-            // Controlla se l'utente è già autenticato
-            const {
-              data: { user },
-            } = await supabaseClient.auth.getUser();
-            if (user) {
-              currentUser = user;
-              updateAuthUI(true);
-              loadFromSupabase();
-            }
-          }
-        } catch (error) {
-          console.log("Supabase non configurato, usando solo storage locale");
-        }
-      }
-
-      async function signUp() {
-        const email = document.getElementById("userEmail").value;
-        if (!email || !supabaseClient) return;
-
-        try {
-          const { data, error } = await supabaseClient.auth.signUp({
-            email: email,
-            password:
-              "temp-password-" + Math.random().toString(36).substring(7),
-          });
-
-          if (error) throw error;
-          alert("Controlla la tua email per il link di conferma!");
-        } catch (error) {
-          alert("Errore registrazione: " + error.message);
-        }
-      }
-
-      async function signIn() {
-        const email = document.getElementById("userEmail").value;
-        if (!email || !supabaseClient) return;
-
-        try {
-          const { data, error } = await supabaseClient.auth.signInWithOtp({
-            email: email,
-          });
-
-          if (error) throw error;
-          alert("Controlla la tua email per il link di accesso!");
-        } catch (error) {
-          alert("Errore accesso: " + error.message);
-        }
-      }
-
-      async function signOut() {
-        if (!supabaseClient) return;
-
-        await supabaseClient.auth.signOut();
-        currentUser = null;
-        updateAuthUI(false);
-      }
-
-      function updateAuthUI(isLoggedIn) {
-        document.getElementById("signUpBtn").style.display = isLoggedIn
-          ? "none"
-          : "inline-block";
-        document.getElementById("signInBtn").style.display = isLoggedIn
-          ? "none"
-          : "inline-block";
-        document.getElementById("signOutBtn").style.display = isLoggedIn
-          ? "inline-block"
-          : "none";
-        document.getElementById("syncBtn").style.display = isLoggedIn
-          ? "inline-block"
-          : "none";
-        document.getElementById("userInfo").style.display = isLoggedIn
-          ? "block"
-          : "none";
-
-        if (isLoggedIn && currentUser) {
-          document.getElementById("userEmailDisplay").textContent =
-            currentUser.email;
-        }
-      }
-
-      async function saveToSupabase() {
-        if (!supabaseClient || !currentUser) return;
-
-        const weekKey = `week_${currentWeekStart.toISOString().split("T")[0]}`;
-        const weekData = {};
-
-        document.querySelectorAll(".slot").forEach((slot) => {
-          const key = `${slot.dataset.day}_${slot.dataset.time}`;
-          const events = [];
-
-          slot.querySelectorAll(".event").forEach((event) => {
-            const type = event.classList.contains("event-uni")
-              ? "uni"
-              : event.classList.contains("event-work1")
-              ? "work1"
-              : "work2";
-            const title = event.querySelector("strong").textContent;
-            
-            // Estrai orari personalizzati se presenti
-            const timeEl = event.querySelector("small");
-            let startTime = "", endTime = "", location = "";
-            
-            if (timeEl && timeEl.textContent.includes("⏰")) {
-              const timeText = timeEl.textContent.replace("⏰ ", "");
-              const timeParts = timeText.split(" - ");
-              if (timeParts.length === 2) {
-                startTime = timeParts[0];
-                endTime = timeParts[1];
-              }
-              // Cerca location nel secondo small element
-              const locationEl = event.querySelector("small:nth-of-type(2)");
-              if (locationEl && locationEl.textContent.includes("📍")) {
-                location = locationEl.textContent.replace("📍 ", "");
-              }
-            } else if (timeEl && timeEl.textContent.includes("📍")) {
-              // Solo location, nessun orario personalizzato
-              location = timeEl.textContent.replace("📍 ", "");
-            }
-
-            events.push({
-              type,
-              title,
-              startTime,
-              endTime,
-              location,
-            });
-          });
-
-          if (events.length > 0) {
-            weekData[key] = events;
-          }
-        });
-
-        try {
-          const { error } = await supabaseClient.from("schedules").upsert({
-            user_id: currentUser.id,
-            week_key: weekKey,
-            data: weekData,
-            updated_at: new Date().toISOString(),
-          });
-
-          if (error) throw error;
-        } catch (error) {
-          console.error("Errore salvataggio online:", error);
-        }
-      }
-
-      async function loadFromSupabase() {
-        if (!supabaseClient || !currentUser) return;
-
-        const weekKey = `week_${currentWeekStart.toISOString().split("T")[0]}`;
-
-        try {
-          const { data, error } = await supabaseClient
-            .from("schedules")
-            .select("data")
-            .eq("user_id", currentUser.id)
-            .eq("week_key", weekKey)
-            .single();
-
-          if (error && error.code !== "PGRST116") throw error;
-
-          if (data && data.data) {
-            // Pulisci gli eventi esistenti
-            document
-              .querySelectorAll(".event")
-              .forEach((event) => event.remove());
-
-            Object.entries(data.data).forEach(([key, events]) => {
-              const [day, time] = key.split("_");
-              const slot = document.querySelector(
-                `[data-day="${day}"][data-time="${time}"]`
-              );
-
-              if (slot) {
-                events.forEach((eventData) => {
-                  const event = createEvent(eventData);
-                  slot.appendChild(event);
-                });
-              }
-            });
-
-            updateStats();
-          }
-        } catch (error) {
-          console.error("Errore caricamento online:", error);
-        }
-      }
-
-      async function syncData() {
-        await saveToSupabase();
-        await loadFromSupabase();
-        alert("Dati sincronizzati con successo!");
-      }
-
-      // Listener per cambio autenticazione
-      if (typeof supabase !== "undefined" && SUPABASE_URL !== "https://your-project.supabase.co") {
-        const { createClient } = supabase;
-        const tempClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        tempClient.auth.onAuthStateChange((event, session) => {
-          if (event === "SIGNED_IN") {
-            currentUser = session.user;
-            updateAuthUI(true);
-            loadFromSupabase();
-          } else if (event === "SIGNED_OUT") {
-            currentUser = null;
-            updateAuthUI(false);
-          }
-        });
-      }
-
-      // Configurazione Supabase (sostituisci con le tue credenziali)
-      // Configurazione Supabase (sostituisci con le tue credenziali)
+      // Configurazione base
 
       const timeSlots = [
         "08:00",
@@ -461,6 +205,11 @@
             slot.onclick = function () {
               openModal(this);
             };
+            
+            // Aggiungi listener per drag and drop
+            slot.addEventListener('dragover', handleDragOver);
+            slot.addEventListener('drop', handleDrop);
+            
             grid.appendChild(slot);
           });
         });
@@ -497,6 +246,7 @@
       function createEvent(data) {
         const event = document.createElement("div");
         event.className = `event event-${data.type}`;
+        event.draggable = true;
         
         // Costruisci il contenuto dell'evento
         let eventContent = `<strong>${data.title}</strong>`;
@@ -512,11 +262,93 @@
         }
         
         event.innerHTML = eventContent;
+        
+        // Event listeners per drag and drop
+        event.addEventListener('dragstart', handleDragStart);
+        event.addEventListener('dragend', handleDragEnd);
+        
         event.onclick = function (e) {
           e.stopPropagation();
           editEvent(data, event);
         };
+        
+        // Posizionamento automatico basato sull'orario personalizzato
+        if (data.startTime && data.endTime) {
+          positionEventByTime(event, data.startTime, data.endTime);
+        }
+        
         return event;
+      }
+
+      function positionEventByTime(eventElement, startTime, endTime) {
+        // Calcola la posizione in base all'orario
+        const startMinutes = timeToMinutes(startTime);
+        const endMinutes = timeToMinutes(endTime);
+        const duration = endMinutes - startMinutes;
+        
+        // Calcola l'offset dalla prima ora (8:00 = 480 minuti)
+        const firstHourMinutes = 8 * 60; // 8:00 in minuti
+        const offsetFromFirstHour = startMinutes - firstHourMinutes;
+        
+        // Ogni slot è di 60 minuti (1 ora)
+        const pixelsPerHour = 60; // Altezza approssimativa di ogni slot
+        const topOffset = (offsetFromFirstHour / 60) * pixelsPerHour;
+        const height = (duration / 60) * pixelsPerHour;
+        
+        // Applica il posizionamento
+        eventElement.style.top = `${topOffset}px`;
+        eventElement.style.height = `${Math.max(height, 30)}px`; // Minimo 30px
+        eventElement.style.zIndex = '5';
+      }
+
+      function timeToMinutes(timeString) {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        return hours * 60 + minutes;
+      }
+
+      function minutesToTime(minutes) {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+      }
+
+      function handleDragStart(e) {
+        draggedEvent = e.target;
+        e.target.style.opacity = '0.5';
+      }
+
+      function handleDragEnd(e) {
+        e.target.style.opacity = '1';
+        draggedEvent = null;
+      }
+
+      function handleDragOver(e) {
+        e.preventDefault();
+      }
+
+      function handleDrop(e) {
+        e.preventDefault();
+        if (draggedEvent && e.target.classList.contains('slot')) {
+          // Rimuovi l'evento dalla posizione originale
+          const originalParent = draggedEvent.parentElement;
+          
+          // Aggiungi l'evento alla nuova posizione
+          e.target.appendChild(draggedEvent);
+          
+          // Reset del posizionamento personalizzato se non ha orari specifici
+          const hasCustomTime = draggedEvent.querySelector('small') && 
+                               draggedEvent.querySelector('small').textContent.includes('⏰');
+          
+          if (!hasCustomTime) {
+            draggedEvent.style.top = '';
+            draggedEvent.style.height = '';
+            draggedEvent.style.zIndex = '';
+          }
+          
+          // Aggiorna le statistiche
+          updateStats();
+          saveToLocalStorage();
+        }
       }
 
       function editEvent(data, eventElement) {
@@ -537,9 +369,6 @@
           currentEditingEvent.element.remove();
           updateStats();
           saveToLocalStorage();
-          if (currentUser && supabaseClient) {
-            saveToSupabase();
-          }
         }
         closeModal();
       }
@@ -605,9 +434,6 @@
 
         updateStats();
         saveToLocalStorage();
-        if (currentUser && supabaseClient) {
-          saveToSupabase();
-        }
         closeModal();
       };
 
@@ -648,17 +474,11 @@
       function previousWeek() {
         currentWeekStart.setDate(currentWeekStart.getDate() - 7);
         initializeSchedule();
-        if (currentUser && supabaseClient) {
-          loadFromSupabase();
-        }
       }
 
       function nextWeek() {
         currentWeekStart.setDate(currentWeekStart.getDate() + 7);
         initializeSchedule();
-        if (currentUser && supabaseClient) {
-          loadFromSupabase();
-        }
       }
 
       function updateStats() {
@@ -778,73 +598,9 @@
         }
       }
 
-      function exportToCSV() {
-        let csv = "Data,Giorno,Ora,Orario Personalizzato,Tipo,Titolo,Luogo,Note\n";
-
-        days.forEach((day, dayIndex) => {
-          timeSlots.forEach((time) => {
-            const slot = document.querySelector(
-              `[data-day="${dayIndex}"][data-time="${time}"]`
-            );
-            const events = slot.querySelectorAll(".event");
-
-            events.forEach((event) => {
-              const date = new Date(currentWeekStart);
-              date.setDate(date.getDate() + dayIndex);
-              const dateStr = date.toLocaleDateString("it-IT");
-
-              const type = event.classList.contains("event-uni")
-                ? "Università"
-                : event.classList.contains("event-work1")
-                ? "Lavoro P1"
-                : "Lavoro P2";
-              const title = event.querySelector("strong").textContent;
-              
-              // Estrai orari personalizzati se presenti
-              const timeEl = event.querySelector("small");
-              let customTime = "";
-              let location = "";
-              
-              if (timeEl && timeEl.textContent.includes("⏰")) {
-                customTime = timeEl.textContent.replace("⏰ ", "");
-                // Cerca location nel secondo small element
-                const locationEl = event.querySelector("small:nth-of-type(2)");
-                if (locationEl && locationEl.textContent.includes("📍")) {
-                  location = locationEl.textContent.replace("📍 ", "");
-                }
-              } else if (timeEl && timeEl.textContent.includes("📍")) {
-                // Solo location, nessun orario personalizzato
-                location = timeEl.textContent.replace("📍 ", "");
-              }
-
-              csv += `${dateStr},${day},${time},"${customTime}",${type},"${title}","${location}",""\n`;
-            });
-          });
-        });
-
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `orario_settimana_${
-          currentWeekStart.toISOString().split("T")[0]
-        }.csv`;
-        link.click();
-      }
-
-      function saveToLocal() {
-        saveToLocalStorage();
-        alert("Dati salvati localmente! Potrai ricaricarli in futuro.");
-      }
-
-      function loadFromLocal() {
-        loadEvents();
-        alert("Dati caricati con successo!");
-      }
-
       // Initialize on load
       window.onload = function () {
         initializeSchedule();
-        initSupabase();
       };
 
       // Close modal when clicking outside
