@@ -1,0 +1,21 @@
+# Configurazione Jekyll per GitHub Pages
+title: "Pianificatore Orario Università e Lavoro"
+description: "Un'applicazione web per gestire orari di università e turni di lavoro"
+
+# Tema
+theme: jekyll-theme-minimal
+
+# Impostazioni GitHub Pages
+baseurl: "/gang"
+url: "https://edviaz.github.io"
+
+# Plugin
+plugins:
+  - jekyll-feed
+
+# Escludere file dalla build
+exclude:
+  - README.md
+  - DEPLOYMENT.md
+  - supabase-setup.sql
+  - .gitignore
